@@ -44,8 +44,10 @@ pruning_db = [pc_info(None,None,None,in_string=i) for i in open(
 
 pilot_db_map = {i.pilot:i for i in pruning_db}
 
-ctrl_equiv_db = equiv_class_database(app_prefix + '_final_control_equivalence.txt')
-store_equiv_db = equiv_class_database(app_prefix + '_final_store_equivalence.txt')
+# ctrl_equiv_db = equiv_class_database(app_prefix + '_final_control_equivalence.txt')    #Rahul
+ctrl_equiv_db = equiv_class_database(app_prefix + '_control_equivalence.txt')
+# store_equiv_db = equiv_class_database(app_prefix + '_final_store_equivalence.txt')
+store_equiv_db = equiv_class_database(app_prefix + '_store_equivalence.txt')
 x86_inj = x86_inj_functions()
 
 dependent_stores_info = {i.split()[0]:i.split()[1] for i in open(
