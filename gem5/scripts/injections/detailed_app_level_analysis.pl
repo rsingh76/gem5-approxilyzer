@@ -13,7 +13,7 @@ if($numArgs != 3) {
 my $app_name = $ARGV[0];
 my $output_file = $ARGV[1];
 my $id = $ARGV[2];
-my $GOLDEN_DIR = "/scratch/$USERNAME/m5out_$id";
+my $GOLDEN_DIR = "/scratch/$USERNAME/$app_name-m5out_$id";
 
 sub get_max	#get the max of two numbers
 {
@@ -1418,7 +1418,7 @@ elsif ($app_name =~ /ctaes/)
 		printf ("SDC:Egregious;%d,%d,%d\n",$line_mismatch,$num_char_mismatch,$weird_val);
 	} 
 }#end of app
-if($app_name =~ /sobel/ || $app_name  =~ /jpeg/ || $app_name =~ /kmeans/ )
+if($app_name eq "sobel" || $app_name  =~ /jpeg/ || $app_name =~ /kmeans/ )
 {
 	my $golden_file = "$GOLDEN_DIR/$app_name.output";
 	$result = `diff -q $output_file $golden_file`;

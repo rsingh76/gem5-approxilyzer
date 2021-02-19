@@ -18,7 +18,7 @@ CHKPT_DIR=$APPROXGEM5/workloads/x86/checkpoint
 GEM5_DIR=$APPROXGEM5//gem5
 SCRIPTS_DIR=$GEM5_DIR/scripts/injections
 DISK_DIR=$APPROXGEM5/dist/m5/system/disks
-TMP_DIR=/scratch/$LOGNAME/m5out_$id
+TMP_DIR=/scratch/$LOGNAME/$app_name-m5out_$id
 OUT_DIR=$GEM5_DIR/outputs/x86
 out_file=$OUT_DIR/$app_name-${out_id}.output
 kernel=$APPROXGEM5/dist/m5/system/binaries/vmlinux-4.9.113
@@ -38,8 +38,12 @@ cleanup () {
 touch $out_file
 
 app_faulty_output="output.txt"
-if [[ "$app_name" = *"sobel"* ]] || [[ "$app_name" = *"kmeans"* ]]; then
-    app_faulty_output="output.pgm"
+if [[ "$app_name" = *"sobel" ]] || [[ "$app_name" = *"kmeans"* ]]; then
+    app_faulty_output="default_output.pgm"
+fi
+
+if [[ "$app_name" = *"blackscholes"* ]]; then
+    app_faulty_output="output_21.txt"
 fi
 
 if [[ "$app_name" = *"jpeg"* ]]; then
