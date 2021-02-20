@@ -15,6 +15,43 @@ import collections
 import operator
 
 
+Reg_map = {}
+Reg_map["rax"]   = "reg 0"     
+Reg_map["rcx"]   = "reg 1"
+Reg_map["rdx"]   = "reg 2"
+Reg_map["rbx"]   = "reg 3"     
+Reg_map["rsp"]   = "reg 4"     
+Reg_map["rbp"]   = "reg 5"     
+Reg_map["rsi"]   = "reg 6"     
+Reg_map["rdi"]   = "reg 7"     
+Reg_map["r8"]    = "reg 8" 
+Reg_map["r9"]    = "reg 9" 
+Reg_map["r10"]   = "reg 10"     
+Reg_map["r11"]   = "reg 11"     
+Reg_map["r12"]   = "reg 12"     
+Reg_map["r13"]   = "reg 13"     
+Reg_map["r14"]   = "reg 14"     
+Reg_map["r15"]   = "reg 15"     
+
+reverse_Reg_map = {}
+reverse_Reg_map["reg 0"  ]    =    "rax"        "reg 0"     
+reverse_Reg_map["reg 1"  ]    =    "rcx"        "reg 1"   
+reverse_Reg_map["reg 2"  ]    =    "rdx"        "reg 2"   
+reverse_Reg_map["reg 3"  ]    =    "rbx"        "reg 3"     
+reverse_Reg_map["reg 4"  ]    =    "rsp"        "reg 4"     
+reverse_Reg_map["reg 5"  ]    =    "rbp"        "reg 5"     
+reverse_Reg_map["reg 6"  ]    =    "rsi"        "reg 6"     
+reverse_Reg_map["reg 7"  ]    =    "rdi"        "reg 7"     
+reverse_Reg_map["reg 8" ]    =    "r8"         "reg 8" 
+reverse_Reg_map["reg 9" ]    =    "r9"         "reg 9" 
+reverse_Reg_map["reg 10" ]    =    "r10"        "reg 10"     
+reverse_Reg_map["reg 11" ]    =    "r11"        "reg 11"     
+reverse_Reg_map["reg 12" ]    =    "r12"        "reg 12"     
+reverse_Reg_map["reg 13" ]    =    "r13"        "reg 13"     
+reverse_Reg_map["reg 14" ]    =    "r14"        "reg 14"     
+reverse_Reg_map["reg 15" ]    =    "r15"        "reg 15"  
+
+
 
 if __name__ == '__main__':
 
@@ -30,8 +67,8 @@ if __name__ == '__main__':
 
     inj_tick = fi_arg.split(",")[1].strip("")
     inj_src_dst = int(fi_arg.split(",")[5].strip(""))            # 0 is source and 1 is destination
-
-
+    fi_inj = fi_arg.split(",")[2].strip("")
+    inj_reg = Reg_map[fi_inj]
     # raw_output_dir = approx_dir + '/gem5/outputs/' + 'x86/'
     # outcomes_file = raw_output_dir + '/' + sys.argv[2]
     ckpt_dir = approx_dir +  "/workloads/x86/checkpoint/" + app_name
@@ -75,7 +112,9 @@ if __name__ == '__main__':
         prev_error_line = Eline
         prev_orig_line  = Oline
 
-
+        # print (Oline)
+        # print (Eline)
+        # exit()
         #  ##### Step 2: Skip the injeciton lines: in case of injeciton in src reg - they are before the execution, otherwise after the execution
         #########################################################################################################################################
         #########################################################################################################################################
