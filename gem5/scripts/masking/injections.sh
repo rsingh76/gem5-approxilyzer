@@ -1,7 +1,7 @@
 #/!bin/bash
 
 if [ $# -ne 6 ]; then
-    echo "Usage: ./run_injection_x86.sh [app_name] [fi_args] [app_ckpt_num] [app_output (in m5out)] [disk_image (in dist/m5/system/disks)] [id]"
+    echo "Usage: ./injections.sh [app_name] [fi_args] [app_ckpt_num] [app_output (in m5out)] [disk_image (in dist/m5/system/disks)] [id]"
     exit 1
 fi
 
@@ -92,11 +92,11 @@ elif grep -q "error" $TMP_DIR/system.pc.com_1.terminal; then
     exit 0
 fi
 
-echo "" >> $out_file
+echo "#New_FI"
 echo $fi_args >> $out_file
+echo "" >> $out_file
+
 python comp_exec_trace.py $fi_args $id $app_name >> $out_file
-echo "################################################################################" >> $out_file
-echo "################################################################################" >> $out_file
 echo "################################################################################" >> $out_file
 
 cleanup

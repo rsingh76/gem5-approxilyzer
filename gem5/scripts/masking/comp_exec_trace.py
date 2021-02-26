@@ -221,8 +221,13 @@ def handle_control_flow(path_1, path_2, injection_tick):
                 perc_cyc_merge_end_after_inj = (float(cyc_merge_end)/float(tot_cycles_after_inj)) * 100
 
                 print ("\n")
+                print ("FINAL_OUTPUT = Control Flow Divergence")
+                print ("\n")
                 print ("Error line = \n"  + el)
                 print ("Original line = \n"  + ol)
+                print ("Correct Execution ticks                                                                    =  " + str(o_last_tick))
+                print ("Faulty Execution ticks                                                                     =  " + str(e_last_tick))
+                print ("Injeciton at tick number                                                                   =  " + str(injection_tick))
                 print ("Difference (err-orig) in cycle count between error free and faulty execution               =  " + str(int(e_last_tick) - int(o_last_tick)))
                 print ("TOTAL Number of cycles after injection point                                               =  " + str (tot_cycles_after_inj))
                 print ("Number of cycles between injection and merging states                                      =  " + str(cyc_inj_merging))
@@ -684,24 +689,31 @@ if __name__ == '__main__':
 
 # PRINT
 
-        for keys in track_mismatch:
-            print (":: "+ keys)
+        # for keys in track_mismatch:
+        #     print (":: "+ keys)
 
-            for entries in track_mismatch[keys]:
-                print (entries)
-            print("\n\n")
+        #     for entries in track_mismatch[keys]:
+        #         print (entries)
+        #     print("\n\n")
 
         print("Final point where things are together::")
+        print("")
         print("Registers not merged =") 
         print(track_regs)
-        print("\n")
+        
         print("Memories not merged  = ") 
         print(track_addrs)
 
-        print("\n")
-        print ("Error line = \n" + Eline)
-        print ("Original line = \n" + Oline)    
+        if len(track_regs) > 0 and len(track_addrs) == 0:
+            result = "REGs state different"
+        elif len (track_regs) == 0 and len(track_addrs) > 0:
+            result = "MEMs state different"
+        elif len (track_regs) > 0 and len (track_addrs) > 0:
+            result = "BOTH regs and mem states are different"
+        elif len (track_regs) == 0 and len(track_addrs) == 0:
+            result = "FINISH and MATCH"
 
+        
         e_tick = Eline.split(":")[0]
         o_tick = Oline.split(":")[0]    
 
@@ -711,6 +723,16 @@ if __name__ == '__main__':
         perc_cyc_merge_end_tot = (float(cyc_merge_end)/float(last_tick)) * 100
         perc_cyc_merge_end_after_inj = (float(cyc_merge_end)/float(tot_cycles_after_inj)) * 100
 
+        print("\n")
+        print ("FINAL_OUTPUT = " + result)
+        print("\n")
+        
+        print ("Error line = \n" + Eline)
+        print ("Original line = \n" + Oline)
+
+        print ("Correct Execution ticks                                                                    =  " + str(last_tick))
+        print ("Faulty Execution ticks                                                                     =  " + str(last_tick))
+        print ("Injeciton at tick number                                                                   =  " + str(inj_tick))
         print ("Difference (err-orig) in cycle count between error free and faulty execution               =  " + str(0))
         print ("TOTAL Number of cycles after injection point                                               =  " + str (tot_cycles_after_inj))
         print ("Number of cycles between injection and merging states                                      =  " + str(cyc_inj_merging))
