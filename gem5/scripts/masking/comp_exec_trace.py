@@ -344,7 +344,7 @@ if __name__ == '__main__':
                         dst_mem_val = origValue                         # TODO: NOt necessarily true, error may have been injected in addr calculation
                     else:
                         print(Oline)
-                        print("BUG 1: ERROR: Line just above instruction is weird ")
+                        print("BUG 1:: Line just above instruction is weird ")
             else:
                 # we are injecting error in destination
                 if inj_reg in Oline and "Setting" in Oline:
@@ -408,7 +408,7 @@ if __name__ == '__main__':
                             track_mismatch["MEM " + e_dst_store_addr] =   [mismatch_details]
                     else:
                         print(Eline)
-                        print("BUG 2: ERROR: Line just above instruciton is weird ")
+                        print("BUG 2: Line just above instruction is weird ")
 
 
             prev_error_line = Eline
@@ -423,14 +423,20 @@ if __name__ == '__main__':
                 prev_error_line = Eline
                 Eline = error.readline()
 
-            if inj_reg in Eline:
+            # Skip the micro-ops 
+            while inj_reg not in Eline:
+                prev_error_line = Eline
+                Eline = error.readline()
+                prev_orig_line = Oline
+                Oline = orig.readline()
+            
+            if inj_reg in Eline:    
                 if "Reading" in Eline:
                     prev_error_line = Eline
                     Eline = error.readline()
             
                     if "Setting" in Eline:
                         errorValue = get_val(Eline)
-
                         prev_error_line = Eline
                         Eline = error.readline()
 
@@ -617,6 +623,14 @@ if __name__ == '__main__':
                 print (origTick)
                 break
 
+            
+            # print origTick, errorTick
+            # print "ERR", err_RegStateMap
+            # print "ORIG", orig_RegStateMap
+            # print track_regs
+            # print track_mismatch
+            # print "\n"
+
             for each_reg in err_RegStateMap:
                 if each_reg == orig_dst_reg:
                     src_dst = 1
@@ -689,12 +703,12 @@ if __name__ == '__main__':
 
 # PRINT
 
-        # for keys in track_mismatch:
-        #     print (":: "+ keys)
+        for keys in track_mismatch:
+            print (":: "+ keys)
 
-        #     for entries in track_mismatch[keys]:
-        #         print (entries)
-        #     print("\n\n")
+            for entries in track_mismatch[keys]:
+                print (entries)
+            print("\n\n")
 
         print("Final point where things are together::")
         print("")

@@ -99,7 +99,7 @@ if __name__ == '__main__':
     raw_output_dir = approx_dir + '/gem5/outputs/' + 'x86/'
     outcomes_file = raw_output_dir + '/' + app_name + '.outcomes_raw'
 
-    masked_outcomes = raw_output_dir + '/' + "masking_attempt_2"                  # TODO: Change this 
+    masked_outcomes = raw_output_dir  + app_name +  "_masking_results"                  # TODO: Change this 
 
 
     fi_arg = ""
@@ -132,6 +132,7 @@ if __name__ == '__main__':
     ctrl_perc_cyc_merge_end_tot_list =       []
     ctrl_perc_cyc_merge_end_after_inj_list = []
     ctrl_extra_cycles = []
+    interesting_fi_args = []
     
 
     with open(masked_outcomes) as file_1:
@@ -170,6 +171,8 @@ if __name__ == '__main__':
                         control_flow_count += 1 
                         # How many cycles it took to converge
                             # check the time as well
+                        if app_name == "lu" or app_name == "swaptions":
+                            continue
                         time_list = read_times(file_1)
                         ctrl_merged_time_list.append(time_list[5])
                         ctrl_perc_cyc_merge_end_tot_list.append(time_list[7])
@@ -186,6 +189,8 @@ if __name__ == '__main__':
                         merged_time_list.append(time_list[5])
                         perc_cyc_merge_end_tot_list.append(time_list[7])
                         perc_cyc_merge_end_after_inj_list.append(time_list[8])
+                        if int(time_list[5]) < 30000 and int(time_list[5]) > 1000:
+                            interesting_fi_args.append(fi_arg)
 
                     elif "REGs state different" in line:
                         # Book keeping for non merged states and different reg states
@@ -222,9 +227,8 @@ if __name__ == '__main__':
                         perc_cyc_merge_end_after_inj_list.append(time_list[8])
 
     
-    for i in ctrl_extra_cycles:
+    for i in interesting_fi_args:
         print i
-
 
     print "\n"
     print "Actual count = ", actual_count
