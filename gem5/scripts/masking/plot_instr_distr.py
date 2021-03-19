@@ -34,6 +34,7 @@ def get_pc_tick_map(tick_pc_database):
 
 def get_pc_inst(disAssembly):
     pc_inst = {}
+    pc_opcode = {}
     with open (disAssembly) as dis:
         for line in dis:
             split_line = line.split(":")
@@ -42,11 +43,15 @@ def get_pc_inst(disAssembly):
                     pc = line.split(":")[0].strip(" ")
                     inst = line.strip("\t").strip("\n")
                     pc_inst[pc] = inst
+                    split_2 = line.split(":")[1].strip("\n").split("\t")
+                    if len(split_2) > 2:
+                        opcode = split_2[2].split(" ")[0]
+                        pc_opcode[pc] = opcode
                 else:
                     continue
             else:
                 continue
-    return pc_inst
+    return pc_inst, pc_opcode
 
 
 if __name__ == '__main__':
@@ -80,7 +85,7 @@ if __name__ == '__main__':
 
     raw_output_dir = approx_dir + '/gem5/outputs/' + 'x86/'
     outcomes_file = raw_output_dir + '/' + app_name + '.outcomes_raw'
-    
+    unique_opcode = set()
 
 # 1. Read the outcomes_raw 
 # get ticks, regs and outcomes:
@@ -90,13 +95,20 @@ if __name__ == '__main__':
 # go through each pc find the inst, find the tick,, iterate through the list of outcomes
 
     pc_tick_map = get_pc_tick_map(tick_pc_database)
-    pc_inst = get_pc_inst(disAssembly)
+    pc_inst, pc_opcode = get_pc_inst(disAssembly)
 
 
     tick_reg_outcome = {}
     for pc in pc_tick_map:
         for tick in pc_tick_map[pc]:
             tick_reg_outcome[tick] = []
+
+    for pc in pc_tick_map:
+        unique_opcode.add(pc_opcode[pc])
+
+
+
+
 
     with open(outcomes_file) as raw_out:
         for line in raw_out:
@@ -114,22 +126,25 @@ if __name__ == '__main__':
     
     pc_outcome_count = {}
     inst_outcome_count = {}
+    opcode_outcome_count = {}
     for pc in pc_tick_map:
         pc_outcome_count[pc] = {"SDC" : 0, "Masked" : 0, "Detected" : 0}
+        opcode_outcome_count[pc_opcode[pc]] = {"SDC" : 0, "Masked" : 0, "Detected" : 0}
     for pc in pc_tick_map:
         inst_outcome_count[pc_inst[pc]] = {"SDC" : 0, "Masked" : 0, "Detected" : 0}
 
 
 
-
     for pc in pc_tick_map:
         inst = pc_inst[pc]
+        opcode = pc_opcode[pc]
         for tick in pc_tick_map[pc]:
             list_outcome_tick = tick_reg_outcome[tick]
             for pair in list_outcome_tick:
                 # each pair is [reg, outcome]
                 pc_outcome_count[pc][pair[1]] += 1
                 inst_outcome_count[inst][pair[1]] += 1
+                opcode_outcome_count[opcode][pair[1]] += 1
 
     # for pc in pc_outcome_count:
     #     print (pc, pc_outcome_count[pc]) 
@@ -137,30 +152,35 @@ if __name__ == '__main__':
     # for inst in inst_outcome_count:
     #     print(inst, inst_outcome_count[inst])
 
+    print "Instruction, SDCs, Detected, Masked"
+    for opcode in opcode_outcome_count:
+        print opcode,",", opcode_outcome_count[opcode]["SDC"],",", opcode_outcome_count[opcode]["Detected"], ",",opcode_outcome_count[opcode]["Masked"]
+
+    exit()
 
 
-    possible_instr = ["xor", "add", "mov", "push", "pop", "cmp", "sub", "ucomisd", "callq", "sqrt", "neg", "shl", "lea", "ret", "mul", "cvtsi2sd", "ja", "jle", "jne", "jg", "test", "jmp", "nop", "cvttsd2si" ]
+    # possible_instr = ["xor", "add", "mov", "push", "pop", "cmp", "sub", "ucomisd", "callq", "sqrt", "neg", "shl", "lea", "ret", "mul", "cvtsi2sd", "ja", "jle", "jne", "jg", "test", "jmp", "nop", "cvttsd2si" ]
 
-    inst_type_outcome_map = {}
-    for inst in possible_instr:
-        inst_type_outcome_map[inst] = {"SDC" : 0, "Masked" : 0, "Detected" : 0}
-    def_val = {"SDC" : 0, "Masked" : 0, "Detected" : 0}
+    # inst_type_outcome_map = {}
+    # for inst in possible_instr:
+    #     inst_type_outcome_map[inst] = {"SDC" : 0, "Masked" : 0, "Detected" : 0}
+    # def_val = {"SDC" : 0, "Masked" : 0, "Detected" : 0}
 
-    for inst in inst_outcome_count:
-        found = 0
-        for poss_i in possible_instr:
-            if poss_i in inst:
-                # inst_type_outcome_map[poss_i] = inst_type_outcome_map[poss_i] + inst_outcome_count[inst]
-                found  = 1
-                inst_type_outcome_map[poss_i] = add_dicts(inst_type_outcome_map[poss_i], inst_outcome_count[inst])
-                break    
-        if found == 0:
-            print ("Add this :", inst)
+    # for inst in inst_outcome_count:
+    #     found = 0
+    #     for poss_i in possible_instr:
+    #         if poss_i in inst:
+    #             # inst_type_outcome_map[poss_i] = inst_type_outcome_map[poss_i] + inst_outcome_count[inst]
+    #             found  = 1
+    #             inst_type_outcome_map[poss_i] = add_dicts(inst_type_outcome_map[poss_i], inst_outcome_count[inst])
+    #             break    
+    #     if found == 0:
+    #         print ("Add this :", inst)
     
-    for inst in inst_type_outcome_map:
-        if inst_type_outcome_map[inst] != def_val:
-            # for i in inst_type_outcome_map[inst]:
-            print inst, inst_type_outcome_map[inst]["SDC"], inst_type_outcome_map[inst]["Masked"], inst_type_outcome_map[inst]["Detected"]
+    # for inst in inst_type_outcome_map:
+    #     if inst_type_outcome_map[inst] != def_val:
+    #         # for i in inst_type_outcome_map[inst]:
+    #         print inst, inst_type_outcome_map[inst]["SDC"], inst_type_outcome_map[inst]["Masked"], inst_type_outcome_map[inst]["Detected"]
         # else:
         #     print("NOT IN PROGRAM:::::",  inst)
 

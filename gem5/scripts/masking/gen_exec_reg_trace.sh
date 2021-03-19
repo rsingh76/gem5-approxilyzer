@@ -35,7 +35,7 @@ if [ $# -eq 3 ]; then
 
     $GEM5_DIR/build/$gem5_isa/gem5.opt -d $CKPT_DIR \
     --debug-flags=ExecEnable,ExecUser,ExecEffAddr,ExecTicks,ExecMicro,IntRegs,FloatRegs,MiscRegs \
-    --debug-file=${app}_dump_reg_micro.gz $GEM5_DIR/configs/example/fs.py \
+    --debug-file=${app}_dump_micro.gz $GEM5_DIR/configs/example/fs.py \
     --disk-image=$disk_image --kernel=$kernel -r 1
 else
 $GEM5_DIR/build/$gem5_isa/gem5.opt -d $CKPT_DIR \

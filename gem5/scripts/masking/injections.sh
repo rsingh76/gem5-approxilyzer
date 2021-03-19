@@ -72,11 +72,11 @@ $GEM5_DIR/build/X86/gem5.opt --outdir=$TMP_DIR \
 
 gzip -d $TMP_DIR/${app_name}_dump_micro.gz
 
-if grep -q "Timeout" $TMP_DIR/temp_${id}.txt; then 
-    echo ${fi_args}"::Detected:Timeout" >> $out_file
-    cleanup
-    exit 0
-fi
+# if grep -q "Timeout" $TMP_DIR/temp_${id}.txt; then 
+#     echo ${fi_args}"::Detected:Timeout" >> $out_file
+#     cleanup
+#     exit 0
+# fi
 
 if grep -q "segfault" $TMP_DIR/system.pc.com_1.terminal; then
     echo ${fi_args}"::Detected:segfault" >> $out_file
@@ -92,7 +92,22 @@ elif grep -q "error" $TMP_DIR/system.pc.com_1.terminal; then
     exit 0
 fi
 
-echo "#New_FI"
+echo ""
+echo "#New_FI" >> $out_file
+
+# just for LU
+
+if grep -q "Timeout" $TMP_DIR/temp_${id}.txt; then 
+    echo $fi_args >> $out_file
+    echo "" >> $out_file
+    echo "FINAL_OUTPUT = Control Flow Divergence" >> $out_file
+    echo "################################################################################" >> $out_file
+    cleanup
+    exit 0
+fi
+
+
+
 echo $fi_args >> $out_file
 echo "" >> $out_file
 
@@ -100,6 +115,7 @@ python comp_exec_trace.py $fi_args $id $app_name >> $out_file
 echo "################################################################################" >> $out_file
 
 cleanup
+exit 0
 
 # if [ -f "$TMP_DIR/${app_faulty_output}" ]; then
 #     if grep -i -q "segfault" $TMP_DIR/${app_faulty_output}; then
