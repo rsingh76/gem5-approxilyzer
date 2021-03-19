@@ -536,7 +536,11 @@ BaseSimpleCPU::preExecute()
     }
     else if (didInject)
     {
-        if (curTick() - injector->injTick >= injector->timeoutVal) // exit on timeout
+        // if(curTick() % 50000000 == 0){
+        //     printf("\nTICK = %ld  timeout VAL = %ld  DIFF = %ld\n", curTick(), injector->timeoutVal, curTick() - injector->injTick);
+        // }
+        // if (curTick() - injector->injTick >= injector->timeoutVal || curTick() > 239301494032500 + 15000) // exit on timeout // LU
+        if (curTick() - injector->injTick >= injector->timeoutVal || curTick() > 135692849528000 + 15000)   // SOBEL
         {
             exitSimLoop("Detected:Timeout\n");
         }
