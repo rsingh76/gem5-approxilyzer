@@ -99,7 +99,7 @@ if __name__ == '__main__':
     raw_output_dir = approx_dir + '/gem5/outputs/' + 'x86/'
     outcomes_file = raw_output_dir + '/' + app_name + '.outcomes_raw'
 
-    masked_outcomes = raw_output_dir  + app_name +  "_masking_results"                  # TODO: Change this 
+    masked_outcomes = raw_output_dir + "masking_results/" + app_name +  "_masking_results"                  # TODO: Change this 
 
 
     fi_arg = ""
@@ -111,8 +111,10 @@ if __name__ == '__main__':
     diff_states = 0
     reg_mismatch = 0
     mem_mismatch = 0
+    early_term = 0
     both_mismatch = 0
     new_error_injection = 0
+    masked_in_same_inst = 0
 
     # times
     correct_execution_ticks = 0
@@ -189,7 +191,7 @@ if __name__ == '__main__':
                         merged_time_list.append(time_list[5])
                         perc_cyc_merge_end_tot_list.append(time_list[7])
                         perc_cyc_merge_end_after_inj_list.append(time_list[8])
-                        if int(time_list[5]) < 30000 and int(time_list[5]) > 1000:
+                        if int(time_list[5]) < 82000 and int(time_list[5]) > 1000:
                             interesting_fi_args.append(fi_arg)
 
                     elif "REGs state different" in line:
@@ -203,6 +205,8 @@ if __name__ == '__main__':
                     elif "MEMs state different" in line:
                         # Book keeping for non merged states and different mem states
                             # Keep incremementing diff state and diff_mem count
+                        if "early" in line:
+                            early_term += 1
                         mem_mismatch += 1
                         diff_states += 1
                         total_bitflips += 1
@@ -225,20 +229,25 @@ if __name__ == '__main__':
                         merged_time_list.append(time_list[5])
                         perc_cyc_merge_end_tot_list.append(time_list[7])
                         perc_cyc_merge_end_after_inj_list.append(time_list[8])
-
+                if "Destination same as injected source" in line:
+                    masked_in_same_inst += 1
+                    total_bitflips += 1
+                    matching_states += 1
+                    merged_time_list.append("0")
+                    
     
-    for i in interesting_fi_args:
-        print i
+    # for i in interesting_fi_args:
+    #     print i
+    # for i in merged_time_list:
+    #     print i
 
     print "\n"
-    print "Actual count = ", actual_count
-    print "Total bitflips = ",total_bitflips
-    print "Number of control flows = ", control_flow_count
-    print "Number of merged states = ", matching_states
-    print "Num of Diff states = ", diff_states
-    print "Num of diff mem states = " , mem_mismatch
-
-
-
-
-                    
+    print "Actual count                                     = ", actual_count
+    print "Total bitflips                                   = ",total_bitflips
+    print "Number of control flows                          = ", control_flow_count
+    print "Number of merged states                          = ", matching_states
+    print "Number of Errors masked in injection instruction = ", masked_in_same_inst
+    print "Num of Diff states                               = ", diff_states
+    print "Num of diff mem states                           = " , mem_mismatch
+    print "Num of early terminations (out ofmem states diff)= " , early_term
+    print "Num of diff reg states                           = " , reg_mismatch

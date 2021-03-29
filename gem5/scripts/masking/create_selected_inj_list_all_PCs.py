@@ -180,7 +180,7 @@ if __name__ == '__main__':
     #     print inj
 
 
-    exit(0)  
+    # exit(0)  
     with open(output_file_name, 'w') as file2:
         for vals in final_inj_list:
             file2.write(('%s\n' % vals))
