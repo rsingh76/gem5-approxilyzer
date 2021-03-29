@@ -284,6 +284,7 @@ if __name__ == '__main__':
     track_regs = set()                             # Set of registers to track
     track_addrs = set()                            # Set of addresses to track
     track_tick = 1
+    early_term = 0
     del_reg = 999
     prev_orig_line = ""
     prev_error_line = ""
@@ -374,7 +375,8 @@ if __name__ == '__main__':
                     if "Setting" in prev_error_line and store_inst == 0:
                         
                         if "int" in prev_error_line:
-                            assert dst_reg == "reg " + prev_error_line.split(":")[3].strip(" ").split(" ")[3], "dst regs not same in both files"
+                            if "NOP" not in inst:
+                                assert dst_reg == "reg " + prev_error_line.split(":")[3].strip(" ").split(" ")[3], "dst regs not same in both files"
                             dst_error_value = prev_error_line.split(":")[3].strip(" ").split(" ")[6].strip(".\n")
                         elif "float" in prev_error_line:
                             assert dst_reg == "float reg " + prev_error_line.split(":")[3].strip(" ").split(" ")[3], "dst regs not same in both files"
@@ -517,8 +519,20 @@ if __name__ == '__main__':
             merge_details = []
             mismatch_details = []
 
+            
+            if len(track_addrs) > 10:
+                early_term = 1
+                break
+
+
             assert origTick == errorTick, "ERROR 1: we are checking different ticks, need to synchronize this better"
 
+            if "CPU is idle" in Oline and "CPU is idle" in Eline:
+                prev_error_line = Eline
+                prev_orig_line  = Oline
+                Eline = error.readline()    
+                Oline = orig.readline()
+                continue
 
 # Gather states from Orig and Error trace for a particular cycle
             while origTick in Oline:
@@ -532,7 +546,7 @@ if __name__ == '__main__':
                     pc = Oline.split(":")[1].strip(" ").split(" ")[1]
                     inst = Oline.split(":")[2].strip(" ") + ": " + Oline.split(":")[3].strip(" ")
                     
-                    if "A=" in Oline and "st" in inst:
+                    if "A=" in Oline and "st" in inst and "ldst" not in inst :
                         is_store = 1
                         store_addr = Oline.split(":")[-1].strip(" ")
                         if "Reading" in prev_orig_line:
@@ -561,7 +575,7 @@ if __name__ == '__main__':
                 elif "system.cpu 0x" in Eline:
                     e_pc = Eline.split(":")[1].strip(" ").split(" ")[1]
                     e_inst = Eline.split(":")[2].strip(" ") + ": " + Eline.split(":")[3].strip(" ")
-                    if "A=" in Eline and "st" in e_inst:
+                    if "A=" in Eline and "st" in e_inst and "ldst" not in e_inst:
                         e_store_addr = Eline.split(":")[-1].strip(" ")
                         if "Reading" in prev_error_line:
                             # print ("DEBUG:: ", errorTick, origTick, store_addr, e_store_addr)
@@ -621,6 +635,7 @@ if __name__ == '__main__':
                 print (Oline)
                 print (Eline)
                 print (origTick)
+                print (("ERROR 6 :: this is not an isntruction"))
                 break
 
             
@@ -641,7 +656,9 @@ if __name__ == '__main__':
                     #  values are same, so check if we are tracking, if we are then states have merged for this register
                     if each_reg in track_regs:
                         # MERGED
-                        assert is_store == 0, "Store instruction can't correct the register"
+                        # print origTick, errorTick, each_reg
+                        if each_reg != "reg 16":
+                            assert is_store == 0, "Store instruction can't correct the register"
                         merge_details = [origTick, pc, inst, orig_RegStateMap[each_reg], err_RegStateMap[each_reg], src_dst, "MERGED"]
                         if is_load == 1:
                             merge_details[2] = merge_details[2] + " || Load Addr = " + e_load_addr
@@ -718,7 +735,9 @@ if __name__ == '__main__':
         print("Memories not merged  = ") 
         print(track_addrs)
 
-        if len(track_regs) > 0 and len(track_addrs) == 0:
+        if early_term == 1:
+            result = "MEMs state different : Early Term"
+        elif len(track_regs) > 0 and len(track_addrs) == 0:
             result = "REGs state different"
         elif len (track_regs) == 0 and len(track_addrs) > 0:
             result = "MEMs state different"
