@@ -163,8 +163,14 @@ control_flag_map["jnp"] = ["PF"]
 control_flag_map["jpo"] = ["PF"]
 control_flag_map["jcxz"] = ["cx"]
 control_flag_map["jecxz"] = ["ecx"]
-control_flag_map["set"] = ["OF", "CF", "ZF", "SF","PF"]             #TODO: consider this, it can corrupt things based on flags
-control_flag_map["cmov"] = ["OF", "CF", "ZF", "SF","PF"]             #TODO: consider this, it can corrupt things based on flags
+control_flag_map["set"] = ["OF", "CF", "ZF", "SF","PF"]            
+control_flag_map["cmov"] = ["OF", "CF", "ZF", "SF","PF"]    
+control_flag_map["call"] =  []          
+control_flag_map["callq"] = []   
+control_flag_map["loop"] = ["ZF", "ecx"]
+control_flag_map["ret"]  = []
+control_flag_map["jmp"] = []
+control_flag_map["jmpq"] = []
 
 all_flag_track_map["OF"] = "clean"
 all_flag_track_map["SF"] = "clean"
@@ -173,10 +179,10 @@ all_flag_track_map["ZF"] = "clean"
 all_flag_track_map["PF"] = "clean"
 
 
-instr_flag_affect_map["OF"] = ['add', 'sub', 'mul','neg', 'adc', 'sbb', 'inc', 'dec','shl', 'test']
-instr_flag_affect_map["SF"] = ['add', 'sub', 'neg', 'adc', 'sbb', 'inc', 'dec', 'test', 'cmp', 'and', 'or', 'xor', 'maxsd']
-instr_flag_affect_map["CF"] = ['add', 'sub', 'mul', 'div', 'neg', 'adc', 'sbb', 'inc', 'dec', 'and', 'or', 'xor', 'not', 'rotate', 'test', 'cmp', 'ucomisd', 'maxsd']
-instr_flag_affect_map["ZF"] = ['add', 'sub', 'mul', 'div', 'neg', 'adc', 'sbb', 'inc', 'dec', 'and', 'or', 'xor', 'not', 'rotate', 'test', 'cmp', 'ucomisd', 'maxsd']
+instr_flag_affect_map["OF"] = ['add', 'sub', 'mul','neg', 'adc', 'sbb', 'inc', 'dec','shl', 'test', 'sqrt']
+instr_flag_affect_map["SF"] = ['add', 'sub', 'neg', 'adc', 'sbb', 'inc', 'dec', 'test', 'cmp', 'and', 'or', 'xor', 'maxsd', 'sqrt']
+instr_flag_affect_map["CF"] = ['add', 'sub', 'mul', 'div', 'neg', 'adc', 'sbb', 'inc', 'dec', 'and', 'or', 'xor', 'not', 'rotate', 'test', 'cmp', 'ucomisd', 'maxsd', 'sqrt']
+instr_flag_affect_map["ZF"] = ['add', 'sub', 'mul', 'div', 'neg', 'adc', 'sbb', 'inc', 'dec', 'and', 'or', 'xor', 'not', 'rotate', 'test', 'cmp', 'ucomisd', 'maxsd','sqrt']
 instr_flag_affect_map["PF"] = ['all']    # all instructions except bad
 
 # TODO: figure out - cvtsi2sd,  cvttsd2si, cvtdq2pd, pshufd
@@ -202,10 +208,13 @@ def get_corrup_list(corr_map):
         # temp = reg_alias_map[regs]
         for i in corr_map[regs]:
             ret_list.append(i)
+        for key in reg_alias_map:
+            if regs in reg_alias_map[key]:
+                ret_list.append(key)
     return ret_list
 
 def check_reg_in_corr_map(reg, corr_map):
-    if reg == None:
+    if reg == "None":
         return None
     for i in corr_map:
         if reg in corr_map[i] or reg == i:
@@ -266,7 +275,7 @@ def check_masking(tup):
     inst_parsed = tup[1]
     tick_pc_database = tup[2]
     tick_pc = tup[3]
-
+    prev_line = "x"
     # return 1 if the error is going to be masked 
     corrupted_count = 1
     instr_exectued = 0
@@ -275,11 +284,13 @@ def check_masking(tup):
     inj_alias_reg = reg_alias_map[inj_reg]
     corrupted_map[inj_reg] = inj_alias_reg
     with open(tick_pc_database) as tp_d:
-        prev_line = "x"
+        
         found = 0
         for line in tp_d:
-            
+            # if found ==1:
+            #     print (line, corrupted_count, corrupted_map)
             if not corrupted_map:
+        
                 return [1 , fi_arg]
             elif instr_exectued > 10000 :
                 return [0 , fi_arg]
@@ -290,32 +301,53 @@ def check_masking(tup):
             load_loc = "x"
             # find the inj_tick first
             if inj_tick not in line and found == 0: 
+                prev_line = line
                 continue
             elif inj_tick in line:
                 found = 1
-                continue
+                # TODO: make sure to consider the consequences of this error in this instruction
+                # flags, destination regs
+
+                # prev_line = line
+                # continue
             # now we are in the insttruction right after injection
             
             tick = line.split(" ")[0]
             pc = tick_pc[tick].strip("\n")
 
             op, is_ctrl, src_regs, src_mem_reg, is_mem, dst_reg = get_pc_details(pc, inst_parsed)
-
-            if is_ctrl == 1 :
-                
-                flags_checked = control_flag_map[op]
+            # print (tick, pc, op, corrupted_map )
+            if is_ctrl == "True" :
+                if "set" in op:
+                    flags_checked = control_flag_map["set"]
+                elif "cmov" in op:
+                    flags_checked = control_flag_map["cmov"]
+                elif "loop" in op:
+                    flags_checked = control_flag_map["loop"]
+                elif "ret" in op:
+                    flags_checked = control_flag_map["ret"]
+                else:
+                    flags_checked = control_flag_map[op]
                 for fl in flags_checked:
                     if all_flag_track_map[fl] == "not_clean":
-                        print ("CONtrol flow issue")
+                        # print ("CONtrol flow issue")
                         return [0 , fi_arg]
+                    elif "cx" in fl:
+                        # check corrupted map if ecx is corrupted 
+                        corr_list = get_corrup_list(corrupted_map)
+                        if "cx" in corr_list or "ch" in corr_list or "cl" in corr_list or "ecx" in corr_list or "rcx" in corr_list:
+                            return [0 , fi_arg]
+
+                prev_line = line
                 continue
+
 
             instr_exectued = instr_exectued + 1
             
-            if "Write" in line and is_mem == 1:
+            if "Write" in line and is_mem == "True":
                 is_store = 1 
                 store_loc = line.split(" ")[3].strip("\n")
-            if "Read" in line and is_mem == 1:
+            if "Read" in line and is_mem == "True":
                 is_load = 1
                 load_loc = line.split(" ")[3].strip("\n")
 
@@ -338,11 +370,14 @@ def check_masking(tup):
             if "set" in op or "cmov" in op:
                 # this means that there are no source regs, these use flags to decide whether or not to move something
                 # so  if any flag is corrupted - destination is corrupted
-                flags_checked = control_flag_map[op]
+                if "set" in op:
+                    flags_checked = control_flag_map["set"]
+                elif "cmov" in op:
+                    flags_checked = control_flag_map["cmov"]
                 for fl in flags_checked:
                     if all_flag_track_map[fl] == "not_clean":
                         # put destination in corrupted map
-                        if dst_check == None and dst_reg != None:
+                        if dst_check == None and dst_reg != "None":
                             corrupted_map[dst_reg] = dst_reg_alias
                             corrupted_count += 1
 
@@ -366,8 +401,9 @@ def check_masking(tup):
                 elif dst_check != None:
                     # this means dst is already in corr_map
                     # normally this would mean that we are writing to a corrupted destination, but since source is also corrupted, no masking in this step
+                    prev_line = line
                     continue
-                elif dst_reg != None:
+                elif dst_reg != "None":
                 # not store, not load , fresh destination which is getting corrupted here
                     corrupted_map[dst_reg] = dst_reg_alias
                     corrupted_count += 1
@@ -376,19 +412,25 @@ def check_masking(tup):
                 # this means that source is clean ? (just check if it is load and with a clean memory) and destination is not, so this will mean masking of this register
                 # clear the entry from corrupted map
                 
-                corrupted_count += 1
+                # corrupted_count += 1
                 if is_load == 1:
                     if load_loc not in corrupted_map:
                         # clean load, masking
                         # corrupted_map.remove(dst_check)
                         update_flags(op, "clean")
-                        del corrupted_map[dst_check]
+                        # del corrupted_map[dst_check]
                     elif load_loc in corrupted_map:
                         # dst is not clean, but source is also not clean.
                         update_flags(op, "not_clean")
+                        prev_line = line
                         continue
                 # corrupted_map.remove(dst_check)
-                del corrupted_map[dst_check]
+                # check if the error was injected in the same tick in this register, if so then don't delete
+                if tick != inj_tick or inj_reg != dst_reg or src_dst != "1":
+                    del corrupted_map[dst_check]   
+                else:
+                    update_flags(op, "not_clean")
+              
 
             elif is_load == 1:
                 # everything is clean but there is a load, so just check if load is from clean address
@@ -400,7 +442,7 @@ def check_masking(tup):
                 update_flags(op, "clean")
                 # everything is clean, check the store loc, if it corrupted then this means masking
                 if store_loc in corrupted_map:
-                    corrupted_map.remove(store_loc)
+                    # corrupted_map.remove(store_loc)
                     del corrupted_map[store_loc]
             prev_line = line
     return [0, fi_arg]
@@ -477,7 +519,7 @@ if __name__ == '__main__':
                 #
                 processing_tuple = []
 
-                # print ((masked_inj[1]))
+                # print (len(masked_map))
                 # exit(0)
 
     tot_inj_map = {}
@@ -493,29 +535,22 @@ if __name__ == '__main__':
 
 
 
-##################################################################################
-    # with open(equivalence_inj) as file1:
-    #     tick_reg_map_res = {}
-    #     for line in file1:
-    #         fi_arg = line.split("\n")[0]
-    #         inj_tick, inj_reg, src_dst, inj_pc = get_inj_details(fi_arg)
-    #         if inj_tick + inj_reg + src_dst in tick_reg_map_res:
-    #             if tick_reg_map_res[inj_tick + inj_reg + src_dst] == "masked":
-    #                 masked_inj.append(fi_arg)
-    #                 continue
-    #             else:
-    #                 continue
+################################################################################## DEBUG
 
-    #         # print fi_arg
-    #         masking = check_masking(fi_arg , inst_parsed, tick_pc_database, tick_pc, dyn_trace)
-    #         if masking == 1:
-    #             # print fi_arg , "  masked   ##################"
-    #             tick_reg_map_res[inj_tick + inj_reg + src_dst] = "masked"
-    #             masked_inj.append(fi_arg)
-    #         else:
-    #             tick_reg_map_res[inj_tick + inj_reg + src_dst] = "not"
+    # fi_arg = "135689617878000,xmm0,0"
+    # inj_tick, inj_reg, src_dst, inj_pc = get_inj_details(fi_arg)
+    
+    
+    # # print fi_arg
+    # tup = [fi_arg, inst_parsed, tick_pc_database, tick_pc, dyn_trace]
+    # masking = check_masking(tup)
+    
+    # print (masking[0] ,  "##################")
+            
+    # exit(0)
 
-    print (len(masked_inj))
+    # print (len(masked_inj))
+
     with open(outcomes_file, 'w') as f:
         for i in masked_inj:
             f.write(('%s\n' % i))
