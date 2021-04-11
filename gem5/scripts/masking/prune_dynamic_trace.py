@@ -130,7 +130,6 @@ def get_src_mem_reg(line):
 
 
 
-# def check_masking(fi_arg, inst_parsed, tick_pc_database, tick_pc):
 def check_masking(tup):
     
     fi_arg = tup[0] 
@@ -192,8 +191,8 @@ def check_masking(tup):
             
             if pc in pc_details:
                 prev_pc = prev_line.split(" ")[2].split(".")[0].split("x")[1].strip(" ")
-                if prev_pc == pc:
-                    continue
+                # if prev_pc == pc:
+                #     continue
                 # print (tick, pc, pc_details[pc])
                 op = pc_details[pc][0]
                 is_ctrl = pc_details[pc][1]
@@ -201,10 +200,17 @@ def check_masking(tup):
                 src_mem_reg = pc_details[pc][3]
                 is_mem = pc_details[pc][4]
                 dst_reg = pc_details[pc][5]
+                if is_mem == "False" and is_ctrl == "False":
+                    for i in control_ops:
+                        if i in op or i in line:
+                            is_ctrl = "True"
                 
             else:
-                # this means that the pc is from a library call and is not in the disassembly, need to get details from the dyn_trace
+                # this means that the pc is from a library/system call and is not in the disassembly, need to get details from the dyn_trace
                 op = line.split(":")[3].split("   ")[0]
+                if "nop" in op or op == "" or op == " " or "\n" in op:
+                    continue
+                
                 if "st" in op and "ldst" not in op and "A=" in line:
                     # it is a store instr
                     is_ctrl = "False"
@@ -283,12 +289,12 @@ def check_masking(tup):
 
             # print (tick, pc, op, src_regs, src_mem_reg, is_mem, mem_loc, dst_reg)
             # print (tick, pc, op, corrupted_map )
-            if is_ctrl == "True" :
-                if "set" in op:
-                    flags_checked = control_flag_map["set"]
-                elif "cmov" in op:
-                    flags_checked = control_flag_map["cmov"]
-                elif "loop" in op:
+            if is_ctrl == "True" and "set" not in op and "cmov" not in op:
+                # if "set" in op:
+                #     flags_checked = control_flag_map["set"]
+                # elif "cmov" in op:
+                #     flags_checked = control_flag_map["cmov"]
+                if "loop" in op:
                     flags_checked = control_flag_map["loop"]
                 elif "ret" in op:
                     flags_checked = control_flag_map["ret"]
@@ -310,12 +316,17 @@ def check_masking(tup):
 
             instr_exectued = instr_exectued + 1
             
-            if "Write" in line and is_mem == "True":
+            # if "Write" in line and is_mem == "True":
+            oper = line.split(":")[3].split("   ")[0]
+            if "st" in oper and "ldst" not in oper and "A=" in line:
                 is_store = 1 
-                store_loc = line.split(" ")[3].strip("\n")
-            if "Read" in line and is_mem == "True":
+                # store_loc = line.split(" ")[3].strip("\n")
+                store_loc = line.split("A=")[1].strip("\n").strip(" ")
+            # if "Read" in line and is_mem == "True":
+            if "ld" in oper and "A=" in line:
                 is_load = 1
-                load_loc = line.split(" ")[3].strip("\n")
+                # load_loc = line.split(" ")[3].strip("\n")
+                load_loc = line.split("A=")[1].strip("\n").strip(" ")
 
             src_reg_alias = []
             src_mem_reg_alias = []
@@ -338,6 +349,7 @@ def check_masking(tup):
                 # so  if any flag is corrupted - destination is corrupted
                 if "set" in op:
                     flags_checked = control_flag_map["set"]
+                    print ("do i reach")
                 elif "cmov" in op:
                     flags_checked = control_flag_map["cmov"]
                 for fl in flags_checked:
@@ -447,7 +459,7 @@ if __name__ == '__main__':
 
 
     raw_output_dir = approx_dir + '/gem5/outputs/' + 'x86/'
-    outcomes_file = app_name + 'dynamic_masked_outcomes.txt'
+    outcomes_file = app_name + '_dynamic_masked_outcomes.txt'
 
     tick_pc = get_tick_pc(tick_pc_database)
 
@@ -507,7 +519,7 @@ if __name__ == '__main__':
 
 ################################################################################## DEBUG
 
-    # fi_arg = "135688813524500,rcx,0"
+    # fi_arg = "239296898665500,edx,0"
     # inj_tick, inj_reg, src_dst, inj_pc = get_inj_details(fi_arg)
     
     

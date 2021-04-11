@@ -42,7 +42,7 @@ if __name__ == '__main__':
 
     raw_output_dir = approx_dir + '/gem5/outputs/' + 'x86/raw_out/'
     raw_outcomes = raw_output_dir + app_name + '.outcomes_raw'
-    outcomes_file = app_name + '_masked_outcomes.txt'
+    outcomes_file = app_name + '_dynamic_masked_outcomes.txt'
 
 
     masked_inj_set = set()

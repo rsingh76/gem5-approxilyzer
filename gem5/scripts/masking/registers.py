@@ -160,6 +160,31 @@ reg_alias_map["t12d"] = ["t12", "t12d"]
 reg_alias_map["t12w"] = ["t12", "t12d", "t12w"]
 reg_alias_map["t12b"] = ["t12", "t12d", "t12w", "t12b"]
 
+reg_alias_map["t16"] = ["t16"] 
+reg_alias_map["t16d"] = ["t16", "t16d"]
+reg_alias_map["t16w"] = ["t16", "t16d", "t16w"]
+reg_alias_map["t16b"] = ["t16", "t16d", "t16w", "t16b"]
+
+reg_alias_map["t17"] = ["t17"] 
+reg_alias_map["t17d"] = ["t17", "t17d"]
+reg_alias_map["t17w"] = ["t17", "t17d", "t17w"]
+reg_alias_map["t17b"] = ["t17", "t17d", "t17w", "t17b"]
+
+reg_alias_map["t18"] = ["t18"] 
+reg_alias_map["t18d"] = ["t18", "t18d"]
+reg_alias_map["t18w"] = ["t18", "t18d", "t18w"]
+reg_alias_map["t18b"] = ["t18", "t18d", "t18w", "t18b"]
+
+reg_alias_map["t19"] = ["t19"] 
+reg_alias_map["t19d"] = ["t19", "t19d"]
+reg_alias_map["t19w"] = ["t19", "t19d", "t19w"]
+reg_alias_map["t19b"] = ["t19", "t19d", "t19w", "t19b"]
+
+reg_alias_map["t21"] = ["t21"] 
+reg_alias_map["t21d"] = ["t21", "t21d"]
+reg_alias_map["t21w"] = ["t21", "t21d", "t21w"]
+reg_alias_map["t21b"] = ["t21", "t21d", "t21w", "t21b"]
+
 reg_alias_map["xmm0"]         = ["xmm0"]
 reg_alias_map["xmm0_high"]    = ["xmm0", "xmm0_high"]
 reg_alias_map["xmm0_low"]     = ["xmm0", "xmm0_low"]
@@ -225,6 +250,11 @@ reg_alias_map["xmm15_high"]    = ["xmm15", "xmm15_high"]
 reg_alias_map["xmm15_low"]     = ["xmm15", "xmm15_low"]
 
 reg_alias_map["ufp1"]         = ["ufp1"]
+reg_alias_map["ufp2"]         = ["ufp2"]
+reg_alias_map["bpl"]          = ["bpl"]
+reg_alias_map["sil"]          = ["sil"]
+reg_alias_map["sil"]          = ["cc0"]
+reg_alias_map["sil"]          = ["cc1"]
 
 reg_alias_map["fpr0"]         = ["fpr0"]
 reg_alias_map["fpr1"]         = ["fpr1"]
